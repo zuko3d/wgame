@@ -1,0 +1,319 @@
+<html>
+    <body>
+        <div id="all-logs" style="position: absolute; top: 1070px; left: 10px; z-index: 3;">
+            <table id="logs-summary" border="1"></table>
+            <table id="logs-table" border="1"></table>
+        </div>
+        <div>
+            <div id="input-box"></div>
+            <div id="field-all" style="position: relative;">
+            </div>
+            <div class="board-all">
+            </div>
+            <div id="player-tablets" style="position: relative; left:1100px; background-repeat: no-repeat; background-size: contain;">
+            </div>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+    </body>
+    <head>
+        <style>
+            .highlight {
+                border: 4px dashed black;
+                /* background-color: rgb(161, 248, 180); */
+            }
+            .highlight:hover {
+                border: 4px solid red;
+            }
+
+            .highlight-history {
+                border: 4px dashed rgb(9, 74, 216);
+                /* background-color: rgb(161, 248, 180); */
+            }
+            .highlight-history:hover {
+                border: 4px solid red;
+            }
+            .orange-border {
+                border: 1px solid transparent;
+            }
+            .orange-border:hover {
+                border: 3px solid orange;
+            }
+
+            .common-border {
+                border: gray;
+            }
+            .uncommon-border {
+                border: green;
+            }
+            .rare-border {
+                border: rgb(12, 62, 213);
+            }
+            .epic-border {
+                border: purple;
+            }
+            .legendary-border {
+                border: orange;
+            }
+
+            .red-border {
+                border: 3px solid transparent;
+            }
+            /* .red-border:hover {
+                border: 3px solid red;
+            } */
+
+            .nonmoving-rect {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+            }
+
+            .crossed {
+                filter: grayscale();
+                border: none;
+            }
+            .crossed:hover {
+                border: none;
+            }
+        </style>
+    <script type="text/javascript">
+        var socket = new WebSocket('ws://localhost:9002');
+        var gServerSocket = new WebSocket('ws://localhost:9102');
+
+        function toggleMainMenu(forceHide = false) {
+            var dv = document.getElementById("main-menu");
+            var showMenu = !dv.hidden;
+            if (forceHide) {
+                showMenu = false;
+            } else {
+                showMenu = !showMenu;
+            }
+
+            if (showMenu) {
+                dv.hidden = false;
+            } else {
+                dv.hidden = true;
+            }
+        }
+
+        function generateInputter(txt, img_width, img_prefix) {
+            var dv = document.querySelector("#input-box");
+            dv.innerHTML = '';
+
+            var table = document.createElement('table');
+            table.insertRow().insertCell().textContent = txt;
+            var tr = table.insertRow();
+            var td = tr.insertCell();
+            td.style.width = 1900;
+
+            for (const cIdx in msg.choices) {
+                var img = document.createElement('img');
+                td.appendChild(img);
+                img.classList.add('highlight');
+                img.style.width = img_width;
+                // border: 1px solid transparent;
+                img.src = img_prefix + cIdx + ".png"
+                img.data = cIdx
+                img.onclick = function() { socket.send('{ "choice": ' + this.data + '}'); document.querySelector("#input-box").innerHTML = ''; };
+            }
+
+            dv.appendChild(table);
+        }
+
+        function addImg(path, parent, wd, additionalClass) {
+            var img = document.createElement('img');
+            img.src = path
+            img.width = wd
+            if (additionalClass) {
+                img.classList.add(additionalClass);
+            }
+            parent.appendChild(img)
+            return img;
+        }
+        function addImgs(path, parent, amount, wd, additionalClass) {
+            for (var i = 0; i < amount; i++) {
+                addImg(path, parent, wd, additionalClass);
+            }
+        }
+        function addGoldImgs(parent, amount, wd) {
+            var amnt = amount;
+            while (amnt >= 5) {
+                addImg('pics/gold_5.png', parent, wd);
+                amnt -= 5;
+            }
+            while (amnt >= 2) {
+                addImg('pics/gold_2.png', parent, wd * 0.85);
+                amnt -= 2;
+            }
+            while (amnt > 0) {
+                addImg('pics/gold_1.png', parent, wd * 0.75);
+                amnt --;
+            }
+        }
+
+        function clearHighlight() {
+            items = document.getElementsByClassName('highlight');
+
+            while (items.length) {
+                items[0].onclick = null;
+                items[0].classList.remove('highlight');
+            };
+        }
+
+        // ----------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------
+        function visualizeSgs(gs) {
+            const sgs = gs.staticGs;
+        }
+        
+        // ----------------------------------------------------------------
+
+        function visualizePs(ps, gs, pIdx) {
+            const res = ps.resources;
+            const sgs = gs.staticGs;
+            const pcolor = sgs.playerColors[pIdx];
+
+            var tablets = document.getElementById("player-tablets");
+            var dv = document.createElement("div");
+            dv.style.position = "relative";
+            dv.style.width = "402px";
+            dv.style.height = "402px";
+            dv.style.backgroundColor = "brown";
+
+            tablets.appendChild(dv);
+        }
+        // --------------------------------------------------------------------------------------------------------------------------------
+        function visualizeGs(gs) {
+            //...
+
+            for (let i = 0; i < gs.players.length; i++) {
+                visualizePs(gs.players[i], gs, i);
+            }
+
+            visualizeSgs(gs);
+        }
+
+        fakeSgs = {
+            "playerColors": [0, 1, 2, 3, 4]
+        };
+        fakeGs = {
+            "staticGs": fakeSgs,
+            "players": [
+                {
+                    "resources": {
+                        "resources": [0, 1, 2, 3, 4, 3, 2, 3, 1, 2],
+                        "gold": 3,
+                    },
+                    "hand": [1, 2, 3, 4, 5, 6, 7],
+                    "craftsmenSlots": [0, -1, 0, -1, 0, -1, 0],
+                    "boundSlots": [true, false, true, false, true, false, true]
+                }
+//             Resources resources;
+
+// ResizableArray<int, 10> hand;
+// std::array<int, 7> craftsmenSlots; // origin, -1 for empty
+
+// std::array<bool, 7> boundSlots;
+            ]
+        };
+        visualizeGs(fakeGs);
+// ==================================================================================================================================
+// ==================================================================================================================================
+// ==================================================================================================================================
+        function generateFieldTable() {
+            var field = document.querySelector("#field-all");
+
+            var fidx = 0;
+            var y = 0;
+
+            let HEIGTH = 25 * 4;
+            let WIDTH = 35 * 4;
+            for (var i = 0; i < 9; i++) {
+                var x = 0
+                
+                if (i % 2 == 0) {
+                    var dv = document.createElement('div');
+                    dv.style.width = WIDTH / 2;
+                    dv.style.height = HEIGTH;
+                    x += WIDTH/2;
+                }
+
+                for (var j = 0; j < 7; j++) {
+                    var dv = document.createElement('td');
+                    dv.id = "fld-" + fidx;
+                    dv.style.width = WIDTH;
+                    dv.style.height = HEIGTH - 6;
+                    dv.style.position = "absolute";
+                    dv.style.top = y + "px";
+                    dv.style.left = x + "px";
+                    dv.style.backgroundImage = "url('pics/field/0.jpg')";
+                    dv.style.backgroundSize = "contain";
+                    dv.style.backgroundRepeat = "no-repeat";
+                    dv.style.border = "2px solid black";
+
+                    field.appendChild(dv);
+                    fidx++;
+                    x += WIDTH;
+                }
+
+                y += HEIGTH;
+            }
+        }
+        generateFieldTable();
+
+        socket.addEventListener('open', function (event) {
+            console.log('Connected to websocket server');
+        });
+
+        gServerSocket.addEventListener('message', function (event) {
+            const obj = JSON.parse(event.data);
+        });
+
+        function sendActionFromFSM() {
+            while (actionFSM.length < 3) {
+                actionFSM.push(-1);
+            }
+
+            var result = '"type": ' + actionFSM[0] + ', "param1": ' + actionFSM[1] + ', "param2": ' + actionFSM[2];
+            console.log("action: " + result);
+            socket.send('{ ' +  result + '}');
+        }
+
+        socket.addEventListener('message', function (event) {
+            toggleMainMenu(true);
+
+            obj = JSON.parse(event.data);
+            msg = JSON.parse(obj.msg);
+            console.log('Received message:', obj.msg);
+
+            visualizeGs(obj.gs);
+            const pIdx = obj.gs.activePlayer;
+
+            // debugField(obj.gs);
+            bridgables = [];
+
+            if (msg.action === 'chooseAction') {
+                var prompt = document.getElementById("input-box");
+                prompt.innerHTML = 'Choose action!';
+                actionFSM = [];
+                for (const action of msg.variants) {
+                    if (action.type == 0) { // UpgradeBuilding, // 0
+                    }
+                }
+            }
+            if (msg.action === 'triggerFinal') {
+                var prompt = document.getElementById("input-box");
+                prompt.innerHTML = 'The game is over!';
+                socket.send('{}');
+            }
+            if (msg.action === 'chooseRace') {
+                generateInputter("Choose your race:", 200, "pics/race_")
+            }
+        });
+        
+    </script>
+    </head>
+</html>
