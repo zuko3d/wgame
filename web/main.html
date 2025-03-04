@@ -10,7 +10,7 @@
             </div>
             <div class="board-all">
             </div>
-            <div id="player-tablets" style="position: relative; left:1100px; background-repeat: no-repeat; background-size: contain;">
+            <div id="player-tablets" style="position: relative; left: 950px; background-repeat: no-repeat; background-size: contain;">
             </div>
             <button onclick="startGame()">Start Game</button>
         </div>
@@ -170,6 +170,53 @@
         }
         
         // ----------------------------------------------------------------
+        function createResourceIcon(idx) {
+            var dv = document.createElement("div");
+            dv.style.width = "35px";
+            dv.style.height = "35px";
+            dv.style.display = "inline-block";
+            dv.style.backgroundSize = "100% 100%";
+            dv.style.backgroundRepeat = "no-repeat";
+            dv.style.backgroundImage = "url('pics/resources/" + idx + ".jpg')";
+
+            return dv;
+        }
+
+        function createCraftsmanCard(card) {
+            var dv = document.createElement("div");
+            dv.style.width = "125px";
+            dv.style.height = "175px";
+            dv.style.display = "inline-block";
+            if (card == null) {
+                dv.style.backgroundImage = "url('pics/craftsmen/bg.jpg')";
+                dv.style.backgroundSize = "100% 100%";
+                dv.style.backgroundRepeat = "no-repeat";
+            } else {
+                var pic = document.createElement("div");
+                pic.style.position = "absolute";
+                pic.style.width = "120px";
+                pic.style.height = "95px";
+                pic.style.top = "19px";
+                pic.style.left = "3px";
+                pic.style.backgroundSize = "contain";
+                pic.style.backgroundRepeat = "no-repeat";
+                pic.style.backgroundImage = "url('pics/craftsmen/" + card.picIdx + ".jpg')";
+                dv.appendChild(pic);
+
+                var front = document.createElement("div");
+                front.style.position = "absolute";
+                front.style.width = "125px";
+                front.style.height = "175px";
+                front.style.backgroundSize = "contain";
+                front.style.backgroundRepeat = "no-repeat";
+                front.style.backgroundImage = "url('pics/craftsmen/front.png')";
+                dv.appendChild(front);
+            }
+
+            dv.style.scale = 0.98;
+
+            return dv;
+        }
 
         function visualizePs(ps, gs, pIdx) {
             const res = ps.resources;
@@ -177,13 +224,66 @@
             const pcolor = sgs.playerColors[pIdx];
 
             var tablets = document.getElementById("player-tablets");
-            var dv = document.createElement("div");
-            dv.style.position = "relative";
-            dv.style.width = "402px";
-            dv.style.height = "402px";
-            dv.style.backgroundColor = "brown";
+            var playerTablet = document.createElement("div");
+            playerTablet.style.position = "absolute";
+            // playerTablet.style.width = "402px";
+            // playerTablet.style.height = "402px";
+            // playerTablet.style.backgroundImage = "url('pics/tablet.jpg')";
+            playerTablet.style.backgroundSize = "100% 100%";
+            playerTablet.style.backgroundRepeat = "no-repeat";
+            playerTablet.style.border = "2px solid black";
 
-            tablets.appendChild(dv);
+            // hand
+            var playerHand = document.createElement("div");
+            playerHand.style.position = "relative";
+            playerHand.style.padding = "10px";
+            
+            for (let card of ps.hand) {
+                var cardDv = createCraftsmanCard(card);
+                cardDv.style.position = "relative";
+                playerHand.appendChild(cardDv);
+            }
+            playerTablet.appendChild(playerHand);
+
+            var resources = document.createElement("div");
+            var u = 0;
+            for (const [idx, amount] of ps.resources.cubes.entries()) {
+                if (amount > 0) {
+                    u++;
+                    var resourceBlock = document.createElement("div");
+                    resourceBlock.style.display = "inline-block";
+                    for (let i = 0; i < amount; i++) {
+                        var c = createResourceIcon(idx);
+                        c.style.display = "block";
+                        resourceBlock.appendChild(c);
+                    }
+                    resources.appendChild(resourceBlock);
+                }
+            }
+            {
+                var uniqueResources = document.createElement("div");
+                uniqueResources.textContent = u;
+                uniqueResources.style.display = "inline-block"
+                uniqueResources.style.fontSize = "35px";
+                resources.appendChild(uniqueResources);
+            }
+            playerTablet.appendChild(resources);
+
+            // tablet cards
+            var playerSlots = document.createElement("div");
+            for (const [idx, card] of ps.craftsmenSlots.entries()) {
+                var cardDv = createCraftsmanCard(card);
+                cardDv.style.position = "relative";
+                if (ps.boundSlots[idx]) {
+                    cardDv.style.filter = "grayscale()";
+                }
+                playerSlots.appendChild(cardDv);
+            }
+            playerSlots.style.padding = "10px";
+            playerSlots.style.paddingTop = "0px";
+            playerTablet.appendChild(playerSlots);
+
+            tablets.appendChild(playerTablet);
         }
         // --------------------------------------------------------------------------------------------------------------------------------
         function visualizeGs(gs) {
@@ -195,6 +295,35 @@
 
             visualizeSgs(gs);
         }
+        fakeCraftsmanCard = {
+            "ownColor": 0,
+            "proccedColor": 1,
+            "profession": 0,
+            "basicAbility": {
+                "type": "None",
+                "cost": 0,
+                "effect": "None",
+                "description": ""
+            },
+            "triggeredAbility": {
+                "type": "None",
+                "cost": 0,
+                "effect": "None",
+                "description": ""
+            },
+            "staticAbility": 0,
+            "picIdx": 0,
+            "idx": 0
+        }
+        fakeCraftsmanCard2 = {
+            "picIdx": 2,
+        };
+        fakeCraftsmanCard3 = {
+            "picIdx": 3,
+        };
+        fakeCraftsmanCard4 = {
+            "picIdx": 4,
+        };
 
         fakeSgs = {
             "playerColors": [0, 1, 2, 3, 4]
@@ -204,19 +333,13 @@
             "players": [
                 {
                     "resources": {
-                        "resources": [0, 1, 2, 3, 4, 3, 2, 3, 1, 2],
+                        "cubes": [0, 1, 2, 3, 2, 3, 2, 3, 1, 2],
                         "gold": 3,
                     },
-                    "hand": [1, 2, 3, 4, 5, 6, 7],
-                    "craftsmenSlots": [0, -1, 0, -1, 0, -1, 0],
+                    "hand": [fakeCraftsmanCard, fakeCraftsmanCard3, fakeCraftsmanCard2, fakeCraftsmanCard4],
+                    "craftsmenSlots": [fakeCraftsmanCard4, fakeCraftsmanCard2, fakeCraftsmanCard, null, fakeCraftsmanCard3, null, fakeCraftsmanCard],
                     "boundSlots": [true, false, true, false, true, false, true]
                 }
-//             Resources resources;
-
-// ResizableArray<int, 10> hand;
-// std::array<int, 7> craftsmenSlots; // origin, -1 for empty
-
-// std::array<bool, 7> boundSlots;
             ]
         };
         visualizeGs(fakeGs);

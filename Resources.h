@@ -17,7 +17,7 @@ struct ResourceOrigin {
 };
 
 struct Resources {
-    std::array<int, 10> resources = {{ 0 }};
+    std::array<int, 10> cubes = {{ 0 }};
     int gold = 0;
     // int winPoints = 0;
 };

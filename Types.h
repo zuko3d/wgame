@@ -143,6 +143,7 @@ enum class CraftsmanAbilityType {
     CraftAlchemy,
     Trade,
     Hire,
+    Attack,
     None,
 };
 
@@ -173,7 +174,7 @@ struct CraftsmanCard {
 };
 
 struct Preset {
-    std::vector<int> cardOrigins;
+    std::vector<const CraftsmanCard*> cardOrigins;
     std::array<int, 7> boundCardOrigins;
 };
 // struct CraftsmanOnField {
@@ -226,10 +227,10 @@ struct LogEvent {
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------
-// Field ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Technology ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // --------------------------------------------------------------------------------------------------------------------------------
 
-enum class FieldHexBonusType {
+enum class TechnologyBonusType {
     ResourceIncome,
     GoldIncome,
     CraftingCost,
@@ -238,13 +239,13 @@ enum class FieldHexBonusType {
     None,
 };
 
-struct FieldHexBonus {
-    FieldHexBonusType type;
+struct TechnologyBonus {
+    TechnologyBonusType type;
     int param;
 };
 
-struct FieldHex {
-    FieldHexBonus bonus;
+struct Technology {
+    TechnologyBonus bonus;
     ResourceGrade grade;
 };
 
